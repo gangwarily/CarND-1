@@ -12,3 +12,4 @@ def process_video(output_name, file_name):
 # MAIN METHOD
 process_video("white_output.mp4", "solidWhiteRight.mp4")
 process_video("yellow_output.mp4", "solidYellowLeft.mp4")
+# process_video("extra.mp4", "challenge.mp4")
