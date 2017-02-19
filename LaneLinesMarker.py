@@ -5,6 +5,7 @@ import cv2
 import os
 
 #const values
+DEFAULT_LOW_CANNY_THRESHOLD = 75
 DEFAULT_THICKNESS = 2
 PROCESSED_FILE = "processed_images/%s"
 RGB_RED = [255, 0, 0]
@@ -12,6 +13,7 @@ SHAPE_X_INDEX = 1
 SHAPE_Y_INDEX = 0
 TEST_FILE = "test_images/%s"
 TEST_IMAGE_DIR = "test_images/"
+THRESHOLD_RATIO = 3
 
 def grayscale(img):
     """Applies the Grayscale transform
@@ -118,7 +120,7 @@ def process_img(fileName):
     #Apply grayscale, blur and canny edges
     gray = grayscale(copied_image)
     blur_gray = gaussian_blur(gray, 5)
-    edges = canny(blur_gray, 50, 150)
+    edges = canny(blur_gray, DEFAULT_LOW_CANNY_THRESHOLD, DEFAULT_LOW_CANNY_THRESHOLD*THRESHOLD_RATIO)
 
     #TODO: Make this dynamic for images of different sizes
     polygon_vector = np.array([[100, ysize], [900, ysize], [475, 310]])
