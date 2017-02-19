@@ -1,11 +1,11 @@
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
 import cv2
 import os
 
-#const values
-DEFAULT_LOW_CANNY_THRESHOLD = 75
+
+# const values
+DEFAULT_LOW_CANNY_THRESHOLD = 50
 DEFAULT_THICKNESS = 2
 PROCESSED_FILE = "processed_images/%s"
 RGB_RED = [255, 0, 0]
@@ -14,6 +14,7 @@ SHAPE_Y_INDEX = 0
 TEST_FILE = "test_images/%s"
 TEST_IMAGE_DIR = "test_images/"
 THRESHOLD_RATIO = 3
+
 
 def grayscale(img):
     """Applies the Grayscale transform
@@ -25,13 +26,16 @@ def grayscale(img):
     # Or use BGR2GRAY if you read an image with cv2.imread()
     # return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+
 def canny(img, low_threshold, high_threshold):
     """Applies the Canny transform"""
     return cv2.Canny(img, low_threshold, high_threshold)
 
+
 def gaussian_blur(img, kernel_size):
     """Applies a Gaussian Noise kernel"""
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
+
 
 def region_of_interest(img, vertices):
     """
@@ -108,28 +112,28 @@ def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     """
     return cv2.addWeighted(initial_img, α, img, β, λ)
 
+
 # Helper method for processing the image and applying the lines
-def process_img(fileName):
-    #Retrieve image and get x/y size values
-    filePath = TEST_FILE % fileName
-    image = mpimg.imread(filePath)
+def process_image(image):
     copied_image = np.copy(image)
     ysize = image.shape[SHAPE_Y_INDEX]
     xsize = image.shape[SHAPE_X_INDEX]
 
-    #Apply grayscale, blur and canny edges
+    # Apply grayscale, blur and canny edges
     gray = grayscale(copied_image)
     blur_gray = gaussian_blur(gray, 5)
     edges = canny(blur_gray, DEFAULT_LOW_CANNY_THRESHOLD, DEFAULT_LOW_CANNY_THRESHOLD*THRESHOLD_RATIO)
 
-    #TODO: Make this dynamic for images of different sizes
-    polygon_vector = np.array([[100, ysize], [900, ysize], [475, 310]])
-    road_edges = region_of_interest(edges, [polygon_vector])
+    # TODO: Make this dynamic for images of different sizes
+    # Using a trapezoid instead of a triangle allows more evenness between
+    # the left and right side lines across a video clip.
+    trapezoid_array = np.array([[100, ysize], [440, 330], [520, 330], [920, ysize]])
+    road_edges = region_of_interest(edges, [trapezoid_array])
 
     line_drawn_image = hough_lines(road_edges, 1, np.pi/180, 5, 1, 10)
-    final_image = weighted_img(line_drawn_image, copied_image)
+    result = weighted_img(line_drawn_image, copied_image)
 
-    return final_image
+    return result
 
 
 #
@@ -138,7 +142,11 @@ def process_img(fileName):
 files = os.listdir(TEST_IMAGE_DIR)
 save_image = True
 for file_name in files:
-    final_image = process_img(file_name)
+    # Retrieve image and get x/y size values
+    filePath = TEST_FILE % file_name
+    image = mpimg.imread(filePath)
+
+    final_image = process_image(image)
     final_file_name = PROCESSED_FILE % file_name
     mpimg.imsave(final_file_name, final_image)
 
